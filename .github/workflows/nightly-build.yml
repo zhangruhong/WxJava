@@ -146,7 +146,7 @@ jobs:
         run: mvn -B clean package
       
       - name: Deploy to Coding Repository
-        run: mvn deploy -DskipTests -Dnexus.staging.skip=true -s settings.xml
+        run: mvn deploy -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/ -s settings.xml
         env:
           CODING_USERNAME: ${{ secrets.CODING_USERNAME }}
           CODING_PASSWORD: ${{ secrets.CODING_PASSWORD }}
