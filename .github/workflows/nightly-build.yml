@@ -120,17 +120,25 @@ jobs:
       
       - name: Create Maven Settings
         run: |
-          cat > settings.xml << EOF
+          # 确保目录存在
+          mkdir -p ~/.m2
+          
+          # 使用原始值而不是环境变量占位符
+          cat > ~/.m2/settings.xml << EOF
           <settings>
             <servers>
               <server>
                 <id>c7d8team-c7d8-bladex</id>
-                <username>\${env.CODING_USERNAME}</username>
-                <password>\${env.CODING_PASSWORD}</password>
+                <username>${{ secrets.CODING_USERNAME }}</username>
+                <password>${{ secrets.CODING_PASSWORD }}</password>
               </server>
             </servers>
           </settings>
           EOF
+          
+          # 显示settings内容(密码部分会被隐藏)
+          echo "验证settings.xml文件内容："
+          cat ~/.m2/settings.xml | sed 's/<password>.*<\/password>/<password>******<\/password>/'
       
       - name: Add Coding Repository to pom
         run: |
@@ -150,10 +158,9 @@ jobs:
         run: mvn -B clean package
       
       - name: Deploy to Coding Repository
-        run: mvn deploy -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -P !release -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/ -s settings.xml
-        env:
-          CODING_USERNAME: ${{ secrets.CODING_USERNAME }}
-          CODING_PASSWORD: ${{ secrets.CODING_PASSWORD }}
+        run: |
+          # 使用debug模式运行，获取更多信息
+          mvn deploy -X -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -P !release -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/
       
       - name: Generate release notes
         run: |
