@@ -333,6 +333,8 @@
   </dependencyManagement>
 
   <distributionManagement>
+    <!-- 移除原有的ossrh配置 -->
+    <!--
     <snapshotRepository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -340,6 +342,14 @@
     <repository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    -->
+    
+    <!-- 添加Coding仓库配置 -->
+    <repository>
+      <id>c7d8team-c7d8-bladex</id>
+      <name>bladex</name>
+      <url>https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/</url>
     </repository>
   </distributionManagement>
 
@@ -431,6 +441,8 @@
     </pluginManagement>
 
     <plugins>
+      <!-- 移除或禁用nexus-staging-maven-plugin -->
+      <!--
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -442,6 +454,7 @@
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
