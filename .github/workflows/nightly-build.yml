@@ -1,9 +1,13 @@
-name: Nightly Build
+name: Branch Build
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # 每天UTC 0:00运行
-  workflow_dispatch:     # 允许手动触发
+  push:
+    branches: 
+      - '*'  # 匹配任何分支的推送
+  pull_request:
+    branches: 
+      - '*'  # 匹配任何分支的PR
+  workflow_dispatch:  # 保留手动触发功能
 
 jobs:
   check_changes:
@@ -15,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: develop
+          # 使用触发构建的分支，不再硬编码
           fetch-depth: 0
       
       - name: Check for new commits
@@ -83,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: develop
+          # 使用触发构建的分支，不再硬编码
           fetch-depth: 0
       
       - name: Set up JDK 8
@@ -153,9 +157,9 @@ jobs:
       
       - name: Generate release notes
         run: |
-          echo "## WxJava Nightly Build ${NIGHTLY_VERSION}" > release-notes.md
+          echo "## WxJava Build ${NIGHTLY_VERSION}" > release-notes.md
           echo "构建时间: $(date)" >> release-notes.md
-          echo "分支: develop" >> release-notes.md
+          echo "分支: ${{ github.ref_name }}" >> release-notes.md  # 使用动态分支名
           echo "Commit: $(git rev-parse HEAD)" >> release-notes.md
           echo "### 最近提交:" >> release-notes.md
           git log -n 5 --pretty=format:"* %s (%h)" >> release-notes.md
