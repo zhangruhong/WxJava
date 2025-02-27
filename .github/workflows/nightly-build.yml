@@ -161,7 +161,6 @@ jobs:
         run: |
           # 使用debug模式运行，获取更多信息
           mvn deploy -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -P !release -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/
-      
       - name: Generate release notes
         run: |
           echo "## WxJava Build ${NIGHTLY_VERSION}" > release-notes.md
