@@ -1,9 +1,13 @@
-name: Nightly Build
+name: Branch Build
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # 每天UTC 0:00运行
-  workflow_dispatch:     # 允许手动触发
+  push:
+    branches: 
+      - '*'  # 匹配任何分支的推送
+  pull_request:
+    branches: 
+      - '*'  # 匹配任何分支的PR
+  workflow_dispatch:  # 保留手动触发功能
 
 jobs:
   check_changes:
@@ -15,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: develop
+          # 使用触发构建的分支，不再硬编码
           fetch-depth: 0
       
       - name: Check for new commits
@@ -83,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: develop
+          # 使用触发构建的分支，不再硬编码
           fetch-depth: 0
       
       - name: Set up JDK 8
@@ -116,17 +120,25 @@ jobs:
       
       - name: Create Maven Settings
         run: |
-          cat > settings.xml << EOF
+          # 确保目录存在
+          mkdir -p ~/.m2
+          
+          # 使用原始值而不是环境变量占位符
+          cat > ~/.m2/settings.xml << EOF
           <settings>
             <servers>
               <server>
                 <id>c7d8team-c7d8-bladex</id>
-                <username>\${env.CODING_USERNAME}</username>
-                <password>\${env.CODING_PASSWORD}</password>
+                <username>${{ secrets.CODING_USERNAME }}</username>
+                <password>${{ secrets.CODING_PASSWORD }}</password>
               </server>
             </servers>
           </settings>
           EOF
+          
+          # 显示settings内容(密码部分会被隐藏)
+          echo "验证settings.xml文件内容："
+          cat ~/.m2/settings.xml | sed 's/<password>.*<\/password>/<password>******<\/password>/'
       
       - name: Add Coding Repository to pom
         run: |
@@ -146,16 +158,15 @@ jobs:
         run: mvn -B clean package
       
       - name: Deploy to Coding Repository
-        run: mvn deploy -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/ -s settings.xml
-        env:
-          CODING_USERNAME: ${{ secrets.CODING_USERNAME }}
-          CODING_PASSWORD: ${{ secrets.CODING_PASSWORD }}
+        run: |
+          # 使用debug模式运行，获取更多信息
+          mvn deploy -DskipTests -Dmaven.deploy.skip=false -Dnexus.staging.skip=true -Dossrh.skip=true -P !release -DaltDeploymentRepository=c7d8team-c7d8-bladex::default::https://c7d8team-maven.pkg.coding.net/repository/c7d8/bladex/
       
       - name: Generate release notes
         run: |
-          echo "## WxJava Nightly Build ${NIGHTLY_VERSION}" > release-notes.md
+          echo "## WxJava Build ${NIGHTLY_VERSION}" > release-notes.md
           echo "构建时间: $(date)" >> release-notes.md
-          echo "分支: develop" >> release-notes.md
+          echo "分支: ${{ github.ref_name }}" >> release-notes.md  # 使用动态分支名
           echo "Commit: $(git rev-parse HEAD)" >> release-notes.md
           echo "### 最近提交:" >> release-notes.md
           git log -n 5 --pretty=format:"* %s (%h)" >> release-notes.md
